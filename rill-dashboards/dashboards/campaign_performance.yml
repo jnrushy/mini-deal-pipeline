@@ -1,0 +1,67 @@
+title: Campaign Performance Analysis
+description: Analyze the performance of advertising campaigns based on DSP reports
+model: dsp_report
+default_time_range: last 30 days
+
+# Filter setup
+filters:
+  - name: campaign_id
+    display_name: Campaign ID
+    type: string
+  - name: cpm_tier
+    display_name: CPM Tier
+    type: string
+  - name: date
+    display_name: Date
+    type: date
+
+# Metrics definitions
+metrics:
+  - name: total_impressions
+    display_name: Total Impressions
+    expression: SUM(impressions)
+    
+  - name: total_revenue
+    display_name: Total Revenue
+    expression: SUM(revenue)
+    format: currency
+    
+  - name: average_cpm
+    display_name: Average CPM
+    expression: AVG(cpm)
+    format: number
+    precision: 2
+    
+  - name: revenue_per_1k
+    display_name: Revenue per 1K Impressions
+    expression: (SUM(revenue) / SUM(impressions)) * 1000
+    format: currency
+    precision: 2
+
+# Visualizations
+visualizations:
+  - name: daily_performance
+    display_name: Daily Performance
+    type: time_series
+    metric_groups:
+      - metrics: [total_impressions, total_revenue]
+        time_dimension: date
+        granularity: day
+        
+  - name: cpm_by_campaign
+    display_name: CPM by Campaign
+    type: bar_chart
+    dimension: campaign_id
+    metric: average_cpm
+    
+  - name: campaign_comparison
+    display_name: Campaign Comparison
+    type: table
+    dimensions: [campaign_id, cpm_tier]
+    metrics: [total_impressions, total_revenue, average_cpm, revenue_per_1k]
+    
+  - name: performance_by_tier
+    display_name: Performance by CPM Tier
+    type: pie_chart
+    dimension: cpm_tier
+    metric: total_revenue 

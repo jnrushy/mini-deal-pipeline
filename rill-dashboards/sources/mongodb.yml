@@ -1,0 +1,7 @@
+type: mongodb
+connection:
+  uri: "${MONGO_URI}"
+  database: "${MONGO_DB}"
+  collection: dsp_reports
+  auth:
+    source: admin 

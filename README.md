@@ -1,6 +1,6 @@
 # Mini Deal Pipeline Simulator
 
-A data processing pipeline that simulates the processing of DSP (Demand-Side Platform) reports for advertising campaigns. This project demonstrates a complete ETL (Extract, Transform, Load) workflow using Dagster for orchestration and MongoDB for data storage.
+A data processing pipeline that simulates the processing of DSP (Demand-Side Platform) reports for advertising campaigns. This project demonstrates a complete ETL (Extract, Transform, Load) workflow using Dagster for orchestration, MongoDB for data storage, and Rill for visualization.
 
 ## What It Does
 
@@ -10,14 +10,15 @@ A data processing pipeline that simulates the processing of DSP (Demand-Side Pla
    - Calculating additional metrics (revenue per impression)
    - Formatting dates properly
 3. **Loads** the processed data into MongoDB for storage and analysis
-4. **Verifies** data integrity through comprehensive testing
+4. **Visualizes** the data using Rill dashboards
+5. **Verifies** data integrity through comprehensive testing
 
 ## Data Pipeline Flow
 
 ```
-CSV Data → [Raw DSP Report] → [Cleaned DSP Report] → [MongoDB Storage]
-             |                      |                      |
-        Read & Parse      Apply filters & calculations    Store
+CSV Data → [Raw DSP Report] → [Cleaned DSP Report] → [MongoDB Storage] → [Rill Dashboards]
+             |                      |                      |                   |
+        Read & Parse      Apply filters & calculations    Store          Visualize
 ```
 
 ## Features
@@ -26,6 +27,7 @@ CSV Data → [Raw DSP Report] → [Cleaned DSP Report] → [MongoDB Storage]
 - **Data Cleaning**: Removes low-quality advertising inventory (low CPM)
 - **Data Enrichment**: Calculates additional metrics on processed data
 - **Persistent Storage**: Stores data in MongoDB for future analysis
+- **Data Visualization**: Creates interactive dashboards with Rill
 - **Robust Testing**: Includes comprehensive tests for each pipeline stage
 - **Configurable**: Easily adjustable thresholds and business rules
 
@@ -35,7 +37,7 @@ CSV Data → [Raw DSP Report] → [Cleaned DSP Report] → [MongoDB Storage]
 
 - Python 3.8+
 - MongoDB installed and running
-- Pandas, PyMongo, and other dependencies
+- Pandas, PyMongo, and other dependencies (see requirements.txt)
 
 ### Installation
 
@@ -62,7 +64,11 @@ pip install -r requirements.txt
 To verify the pipeline works correctly:
 
 ```bash
+# Test MongoDB integration
 python -m unittest test_deal_pipeline.py
+
+# Test Rill integration
+python -m unittest test_rill_integration.py
 ```
 
 The tests validate:
@@ -71,12 +77,14 @@ The tests validate:
 - Calculation of metrics
 - MongoDB integration
 - Data structure and integrity
+- Rill project structure and configuration
 
 ### Running the Pipeline
 
 To run the complete pipeline:
 
 ```bash
+# Run Dagster pipeline
 dagster dev
 ```
 
@@ -84,6 +92,45 @@ Then:
 1. Open your browser to `http://localhost:3000`
 2. Navigate to the Assets tab
 3. Click "Materialize All" to run the pipeline
+
+### Running Rill Dashboards
+
+To run the Rill dashboards:
+
+```bash
+# Set up Rill (only needed once)
+./setup_rill.sh
+
+# Start Rill server
+cd rill-dashboards
+rill start
+```
+
+Then:
+1. Open your browser to `http://localhost:9876`
+2. Navigate to the "Dashboards" section
+3. View the "Campaign Performance Analysis" dashboard
+
+## Rill Dashboard Features
+
+The Rill integration provides:
+
+1. **Campaign Performance Analysis Dashboard**:
+   - Daily performance trends
+   - CPM comparison by campaign
+   - Performance metrics by CPM tier
+   - Detailed campaign comparison table
+
+2. **Interactive Filters**:
+   - Filter by campaign ID
+   - Filter by CPM tier (High, Medium, Low)
+   - Filter by date range
+
+3. **Key Metrics**:
+   - Total impressions
+   - Total revenue
+   - Average CPM
+   - Revenue per 1K impressions
 
 ## Extending the Project
 
@@ -111,15 +158,13 @@ def cleaned_dsp_report(raw_dsp_report: pd.DataFrame) -> Output[pd.DataFrame]:
     # ...
 ```
 
-### Adding Visualization with Rill
+### Creating New Rill Dashboards
 
-Future extension plans include adding Rill dashboards for data visualization:
+Add new dashboards to the Rill project:
 
-1. Connect Rill to the MongoDB database
-2. Create visualizations for:
-   - Campaign performance by day
-   - CPM distribution
-   - Revenue analysis
+1. Create a new dashboard definition in `rill-dashboards/dashboards/`
+2. Define metrics and visualizations
+3. Restart the Rill server to see changes
 
 ## Project Structure
 
@@ -130,6 +175,8 @@ mini-deal-pipeline/
 ├── .env                        # Environment variables
 ├── sample_dsp_report.csv       # Sample input data
 ├── test_deal_pipeline.py       # Pipeline tests
+├── test_rill_integration.py    # Rill integration tests
+├── setup_rill.sh               # Rill setup script
 ├── deal_pipeline/
 │   ├── __init__.py             # Dagster repository
 │   ├── assets/
@@ -141,30 +188,23 @@ mini-deal-pipeline/
 │   └── resources/
 │       ├── __init__.py
 │       └── mongo_resource.py   # MongoDB connector
+└── rill-dashboards/
+    ├── rill.yaml               # Rill project config
+    ├── sources/
+    │   └── mongodb.yml         # MongoDB connection
+    ├── models/
+    │   └── dsp_report.sql      # Data model
+    └── dashboards/
+        └── campaign_performance.yml  # Dashboard definition
 ```
-
-## Usage
-
-1. **Start the Pipeline**
-   - Run `dagster dev` to start the Dagster UI
-   - Navigate to the Assets page
-   - Click "Materialize All" to run the pipeline
-
-2. **Monitor Progress**
-   - View job execution in real-time
-   - Check asset materialization
-   - Monitor MongoDB collection updates
-
-3. **View Results**
-   - Access processed data in MongoDB
-   - View metadata about the processing steps
-   - Analyze cleaned data in your preferred MongoDB client
 
 ## Dependencies
 
 - dagster==1.6.7
-- dagster-mongo==0.20.7
 - pymongo==4.6.1
 - pandas==2.2.1
 - python-dotenv==1.0.1
-- pytest==8.0.2 
+- pytest==8.0.2
+- tabulate==0.9.0
+- pyyaml==6.0.2
+- rilldata  # Installed via setup_rill.sh 

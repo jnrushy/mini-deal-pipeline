@@ -1,0 +1,6 @@
+version: 1
+project:
+  name: dsp-reports-dashboard
+  title: DSP Reports Dashboard
+  description: Dashboard for analyzing DSP report data
+  environment: development 
