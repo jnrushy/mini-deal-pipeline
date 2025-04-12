@@ -7,8 +7,15 @@ from datetime import datetime
 @asset
 def raw_dsp_report() -> Output[pd.DataFrame]:
     """Reads the raw DSP report from CSV file."""
+    # Read the CSV file
     df = pd.read_csv('sample_dsp_report.csv')
-    df['date'] = pd.to_datetime(df['date'])
+    
+    # Clean string columns to remove whitespace
+    for col in df.select_dtypes(include=['object']):
+        df[col] = df[col].str.strip()
+    
+    # Now convert date with explicit format
+    df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
     
     return Output(
         df,
