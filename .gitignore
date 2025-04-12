@@ -40,4 +40,5 @@ env/
 
 # Dagster
 .dagster/
-dagster.yaml 
+dagster.yaml
+.tmp_dagster_home*/ 
