@@ -1,32 +1,41 @@
 import pandas as pd
-from dagster import asset, Output
+from dagster import asset, Output, MetadataValue
 from typing import List, Dict
 import os
+from datetime import datetime
 
 @asset
 def raw_dsp_report() -> Output[pd.DataFrame]:
     """Reads the raw DSP report from CSV file."""
-    # In a real implementation, this would read from an actual file
-    # For now, we'll create a sample DataFrame
-    data = {
-        'campaign_id': ['C1', 'C2', 'C3', 'C4'],
-        'impressions': [1000, 2000, 1500, 3000],
-        'revenue': [10.0, 15.0, 7.5, 30.0],
-        'cpm': [10.0, 7.5, 5.0, 10.0]
-    }
-    df = pd.DataFrame(data)
-    return Output(df, metadata={"num_rows": len(df)})
+    df = pd.read_csv('sample_dsp_report.csv')
+    df['date'] = pd.to_datetime(df['date'])
+    
+    return Output(
+        df,
+        metadata={
+            "num_rows": len(df),
+            "date_range": f"{df['date'].min()} to {df['date'].max()}",
+            "preview": MetadataValue.md(df.head().to_markdown())
+        }
+    )
 
 @asset
 def cleaned_dsp_report(raw_dsp_report: pd.DataFrame) -> Output[pd.DataFrame]:
-    """Cleans the DSP report by removing low CPM entries."""
+    """Cleans the DSP report by removing low CPM entries and adding metrics."""
     # Filter out entries with CPM less than 7.0
-    cleaned_df = raw_dsp_report[raw_dsp_report['cpm'] >= 7.0]
+    cleaned_df = raw_dsp_report[raw_dsp_report['cpm'] >= 7.0].copy()
+    
+    # Add some basic metrics
+    cleaned_df['revenue_per_impression'] = cleaned_df['revenue'] / cleaned_df['impressions']
+    
     return Output(
         cleaned_df,
         metadata={
             "num_rows": len(cleaned_df),
-            "removed_rows": len(raw_dsp_report) - len(cleaned_df)
+            "removed_rows": len(raw_dsp_report) - len(cleaned_df),
+            "avg_cpm": cleaned_df['cpm'].mean(),
+            "total_revenue": cleaned_df['revenue'].sum(),
+            "preview": MetadataValue.md(cleaned_df.head().to_markdown())
         }
     )
 
@@ -43,5 +52,9 @@ def mongo_dsp_report(cleaned_dsp_report: pd.DataFrame, mongo_resource) -> Output
     
     return Output(
         {"inserted_ids": len(result.inserted_ids)},
-        metadata={"num_records": len(records)}
+        metadata={
+            "num_records": len(records),
+            "collection": "dsp_reports",
+            "database": os.getenv('MONGO_DB')
+        }
     ) 
