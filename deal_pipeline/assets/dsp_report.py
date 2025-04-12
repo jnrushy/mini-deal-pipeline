@@ -1,5 +1,5 @@
 import pandas as pd
-from dagster import asset, Output, MetadataValue
+from dagster import asset, Output, MetadataValue, AssetIn
 from typing import List, Dict
 import os
 from datetime import datetime
@@ -39,9 +39,10 @@ def cleaned_dsp_report(raw_dsp_report: pd.DataFrame) -> Output[pd.DataFrame]:
         }
     )
 
-@asset
-def mongo_dsp_report(cleaned_dsp_report: pd.DataFrame, mongo_resource) -> Output[Dict]:
+@asset(required_resource_keys={"mongo_resource"})
+def mongo_dsp_report(context, cleaned_dsp_report: pd.DataFrame) -> Output[Dict]:
     """Stores the cleaned DSP report in MongoDB."""
+    mongo_resource = context.resources.mongo_resource
     collection = mongo_resource.get_collection('dsp_reports')
     
     # Convert DataFrame to list of dictionaries
