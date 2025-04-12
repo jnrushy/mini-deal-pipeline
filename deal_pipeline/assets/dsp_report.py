@@ -35,13 +35,17 @@ def cleaned_dsp_report(raw_dsp_report: pd.DataFrame) -> Output[pd.DataFrame]:
     # Add some basic metrics
     cleaned_df['revenue_per_impression'] = cleaned_df['revenue'] / cleaned_df['impressions']
     
+    # Convert NumPy float64 to Python float for metadata
+    avg_cpm = float(cleaned_df['cpm'].mean())
+    total_revenue = float(cleaned_df['revenue'].sum())
+    
     return Output(
         cleaned_df,
         metadata={
             "num_rows": len(cleaned_df),
             "removed_rows": len(raw_dsp_report) - len(cleaned_df),
-            "avg_cpm": cleaned_df['cpm'].mean(),
-            "total_revenue": cleaned_df['revenue'].sum(),
+            "avg_cpm": avg_cpm,
+            "total_revenue": total_revenue,
             "preview": MetadataValue.md(cleaned_df.head().to_markdown())
         }
     )
