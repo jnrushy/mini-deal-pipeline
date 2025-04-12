@@ -38,6 +38,7 @@ CSV Data → [Raw DSP Report] → [Cleaned DSP Report] → [MongoDB Storage] →
 - Python 3.8+
 - MongoDB installed and running
 - Pandas, PyMongo, and other dependencies (see requirements.txt)
+- For Rill: See [RILL_INSTALL_NOTES.md](RILL_INSTALL_NOTES.md)
 
 ### Installation
 
@@ -52,11 +53,15 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+pip install dagster dagster-webserver  # For running the Dagster UI
+```
 
-# Set up environment variables
-# Create .env file with:
-# MONGO_URI=mongodb://localhost:27017
-# MONGO_DB=deal_pipeline
+### Environment Setup
+
+Create a `.env` file with the following:
+```
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB=deal_pipeline
 ```
 
 ### Running Tests
@@ -67,8 +72,11 @@ To verify the pipeline works correctly:
 # Test MongoDB integration
 python -m unittest test_deal_pipeline.py
 
-# Test Rill integration
+# Test Rill integration (no Rill installation required)
 python -m unittest test_rill_integration.py
+
+# Run all tests
+python -m unittest discover
 ```
 
 The tests validate:
@@ -81,11 +89,11 @@ The tests validate:
 
 ### Running the Pipeline
 
-To run the complete pipeline:
+To run the complete pipeline using Dagster:
 
 ```bash
-# Run Dagster pipeline
-dagster dev
+# Start the Dagster UI
+dagster dev -m deal_pipeline
 ```
 
 Then:
@@ -93,23 +101,27 @@ Then:
 2. Navigate to the Assets tab
 3. Click "Materialize All" to run the pipeline
 
-### Running Rill Dashboards
+### Verifying Dagster and Rill Integration
 
-To run the Rill dashboards:
+This project includes tests specifically for validating the integration with both Dagster and Rill:
 
+**Testing Dagster Integration:**
 ```bash
-# Set up Rill (only needed once)
-./setup_rill.sh
+# Test running the Dagster pipeline
+dagster job execute -j process_dsp_report -m deal_pipeline
+```
 
-# Start Rill server
+**Testing Rill Integration:**
+```bash
+# Validate Rill configuration (without running Rill)
+python -m unittest test_rill_integration.py
+
+# To run Rill (if installed)
 cd rill-dashboards
 rill start
 ```
 
-Then:
-1. Open your browser to `http://localhost:9876`
-2. Navigate to the "Dashboards" section
-3. View the "Campaign Performance Analysis" dashboard
+See [RILL_INSTALL_NOTES.md](RILL_INSTALL_NOTES.md) for details on Rill installation and usage.
 
 ## Rill Dashboard Features
 
@@ -171,6 +183,7 @@ Add new dashboards to the Rill project:
 ```
 mini-deal-pipeline/
 ├── README.md                   # Project documentation
+├── RILL_INSTALL_NOTES.md       # Rill installation instructions
 ├── requirements.txt            # Dependencies
 ├── .env                        # Environment variables
 ├── sample_dsp_report.csv       # Sample input data
@@ -200,11 +213,11 @@ mini-deal-pipeline/
 
 ## Dependencies
 
-- dagster==1.6.7
-- pymongo==4.6.1
-- pandas==2.2.1
-- python-dotenv==1.0.1
-- pytest==8.0.2
-- tabulate==0.9.0
-- pyyaml==6.0.2
-- rilldata  # Installed via setup_rill.sh 
+- dagster, dagster-webserver - Workflow orchestration
+- pymongo - MongoDB interface
+- pandas - Data processing
+- python-dotenv - Environment management
+- pytest - Testing
+- tabulate - Table formatting for Dagster
+- pyyaml - YAML parsing for Rill configuration
+- Rill - Data visualization (installed separately) 
